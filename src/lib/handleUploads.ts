@@ -41,7 +41,7 @@ export async function getCompressedImageFromHandle(
 ) {
   const file = await fileHandle.getFile();
   // paint onto canvas
-  const canvas = document.createElement("canvas");
+  const canvas = document.createElement("canvas"); // MUST DESTROY AFTER USE
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not get canvas context");
 
@@ -63,14 +63,21 @@ export async function getCompressedImageFromHandle(
   canvas.height = height;
   ctx.drawImage(img, 0, 0, width, height);
 
-  return new Promise<Blob>((resolve, reject) => {
+  const blob: Blob | null = await new Promise((resolve) => {
     canvas.toBlob(
-      (blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error("Could not create blob"));
+      (b) => {
+        resolve(b);
       },
       "image/jpeg",
       0.92 // quality
     );
   });
+  if (!blob) throw new Error("Could not create blob from canvas");
+
+  // Cleanup
+  canvas.width = 0;
+  canvas.height = 0;
+  canvas.remove();
+
+  return blob;
 }
