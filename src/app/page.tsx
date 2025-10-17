@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 
 import { openFilePicker } from "@/lib/handleUploads";
 import { useState } from "react";
+import LockerImage from "@/components/LockerImage";
 
 export default function Home() {
   const [compressedImages, setCompressedImages] = useState<Blob[]>([]);
@@ -38,12 +39,7 @@ export default function Home() {
 
       <div className="mt-6 grid grid-cols-4 gap-4">
         {compressedImages.map((img, idx) => (
-          <img
-            key={idx}
-            src={URL.createObjectURL(img)}
-            alt={`Compressed ${idx + 1}`}
-            className="w-full h-auto rounded shadow"
-          />
+          <LockerImage img={img} key={idx} name={`${idx + 1}`} />
         ))}
       </div>
     </div>
