@@ -3,10 +3,11 @@ import { Button } from "./ui/button";
 
 type Props = {
   img: Blob;
-  name: string;
+  idx: number;
+  setEditingIndex?: (index: number | null) => void;
 };
 
-function LockerImage({ img, name }: Props) {
+function LockerImage({ img, idx, setEditingIndex }: Props) {
   const url = URL.createObjectURL(img);
   return (
     <div>
@@ -17,8 +18,10 @@ function LockerImage({ img, name }: Props) {
       />
       <Spacer size={0.5} />
       <div className="flex items-center justify-between gap-4">
-        <p className="font-semibold">Image: {name}</p>
-        <Button variant={"outline"}>Crop</Button>
+        <p className="font-semibold">Image: {idx + 1}</p>
+        <Button variant={"outline"} onClick={() => setEditingIndex(idx)}>
+          Crop
+        </Button>
       </div>
     </div>
   );
