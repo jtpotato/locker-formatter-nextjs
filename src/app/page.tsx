@@ -5,15 +5,46 @@ import { Label } from "@/components/ui/label";
 import Spacer from "@/components/spacer";
 import { Button } from "@/components/ui/button";
 
-import { openFilePicker } from "@/lib/handleUploads";
-import { useState } from "react";
+import {
+  getFullResImageFromHandle,
+  LockerImageObject,
+  openFilePicker,
+} from "@/lib/handleUploads";
+import { useEffect, useRef, useState } from "react";
 import LockerImage from "@/components/LockerImage";
-import { Cropper, RectangleStencil } from "react-advanced-cropper";
+import { Cropper, CropperRef, RectangleStencil } from "react-advanced-cropper";
 import "react-advanced-cropper/dist/style.css";
 
 export default function Home() {
-  const [compressedImages, setCompressedImages] = useState<Blob[]>([]);
+  const [images, setImages] = useState<LockerImageObject[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingImage, setEditingImage] = useState<Blob | null>(null);
+
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const cropperRef = useRef<CropperRef>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (editingIndex !== null) {
+      dialogRef.current?.showModal();
+
+      (async () => {
+        const blob = await getFullResImageFromHandle(
+          images[editingIndex].fileHandle
+        );
+        if (!cancelled) {
+          setEditingImage(blob);
+        }
+      })();
+    } else {
+      dialogRef.current?.close();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editingIndex, images]);
 
   return (
     <div className="font-sans p-4">
@@ -30,36 +61,57 @@ export default function Home() {
         <Button
           id="pictures"
           onClick={async () =>
-            setCompressedImages([
-              ...compressedImages,
-              ...(await openFilePicker()),
-            ])
+            setImages([...images, ...(await openFilePicker())])
           }
         >
           Upload Photos
         </Button>
       </div>
 
-      <div className="mt-6 grid grid-cols-4 gap-4">
-        {compressedImages.map((img, idx) => (
-          <LockerImage
-            img={img}
-            key={idx}
-            idx={idx}
-            setEditingIndex={setEditingIndex}
-          />
+      <div className="mt-6 columns-4">
+        {images.map((img, idx) => (
+          <div className="mb-4 break-inside-avoid" key={idx}>
+            <LockerImage
+              img={img.editedBlob}
+              idx={idx}
+              setEditingIndex={setEditingIndex}
+            />
+          </div>
         ))}
       </div>
 
-      {editingIndex !== null && (
+      <dialog ref={dialogRef}>
         <div className="max-w-lg max-h-lg">
-          <Cropper
-            src={URL.createObjectURL(compressedImages[editingIndex])}
-            className="cropper"
-            stencilComponent={RectangleStencil}
-          />
+          {editingIndex !== null && editingImage !== null && (
+            <Cropper
+              src={URL.createObjectURL(editingImage)}
+              className="cropper"
+              stencilComponent={RectangleStencil}
+              ref={cropperRef}
+            />
+          )}
+          <Button
+            onClick={() => {
+              // grab blob from cropper
+              if (editingIndex == null || !cropperRef.current) {
+                return;
+              }
+              const canvas = cropperRef.current.getCanvas();
+              canvas?.toBlob((blob) => {
+                if (blob) {
+                  const newImages = [...images];
+                  newImages[editingIndex].editedBlob = blob;
+                  setImages(newImages);
+                  setEditingIndex(null);
+                  console.log("Saved cropped image");
+                }
+              });
+            }}
+          >
+            Save
+          </Button>
         </div>
-      )}
+      </dialog>
     </div>
   );
 }

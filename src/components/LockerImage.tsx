@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 type Props = {
   img: Blob;
   idx: number;
-  setEditingIndex?: (index: number | null) => void;
+  setEditingIndex: (index: number | null) => void;
 };
 
 function LockerImage({ img, idx, setEditingIndex }: Props) {

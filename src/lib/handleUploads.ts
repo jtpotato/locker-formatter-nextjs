@@ -1,5 +1,10 @@
 // Handles photo "uploads". Everything remains on-device. Photos too large for memory, so we use native system filepicker allowing us to hold on to file handles so we can reference when we need full res.
 
+export type LockerImageObject = {
+  fileHandle: FileSystemFileHandle;
+  editedBlob: Blob;
+};
+
 /** Promise. Returns a blob array. */
 export async function openFilePicker() {
   const fileHandles = await window.showOpenFilePicker({
@@ -33,7 +38,14 @@ export async function openFilePicker() {
     // In a real app, you might want to display the images or process them further
   });
 
-  return compressedImages;
+  const lockerImageObjects: LockerImageObject[] = compressedImages.map(
+    (blob, index) => ({
+      fileHandle: fileHandles[index],
+      editedBlob: blob,
+    })
+  );
+
+  return lockerImageObjects;
 }
 
 export async function getCompressedImageFromHandle(
@@ -80,4 +92,11 @@ export async function getCompressedImageFromHandle(
   canvas.remove();
 
   return blob;
+}
+
+export async function getFullResImageFromHandle(
+  fileHandle: FileSystemFileHandle
+) {
+  const file = await fileHandle.getFile();
+  return file;
 }
