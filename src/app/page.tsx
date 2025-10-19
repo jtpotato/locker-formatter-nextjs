@@ -80,8 +80,14 @@ export default function Home() {
         ))}
       </div>
 
-      <dialog ref={dialogRef}>
-        <div className="max-w-lg max-h-lg">
+      <dialog
+        ref={dialogRef}
+        className="m-auto border-2 border-black/10 rounded-lg"
+        onCancel={() => {
+          setEditingIndex(null);
+        }}
+      >
+        <div className="max-w-lg max-h-lg p-4">
           {editingIndex !== null && editingImage !== null && (
             <Cropper
               src={URL.createObjectURL(editingImage)}
@@ -90,6 +96,7 @@ export default function Home() {
               ref={cropperRef}
             />
           )}
+          <Spacer size={1} />
           <Button
             onClick={() => {
               // grab blob from cropper
