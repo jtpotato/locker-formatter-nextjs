@@ -1,7 +1,5 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Spacer from "@/components/spacer";
 import { Button } from "@/components/ui/button";
 
@@ -52,29 +50,36 @@ export default function Home() {
         <h1>Locker Formatter</h1>
         <p className="text-muted">
           Automatically pack a bunch of photos onto a page to be printed.
+          Uploading photos may take a while.
         </p>
       </div>
 
       <Spacer size={4} />
 
-      <div className="max-w-md m-auto">
+      <div className="max-w-md m-auto gap-2 flex">
         <Button
           id="pictures"
           onClick={async () =>
-            setImages([...images, ...(await openFilePicker())])
+            await openFilePicker((img) => setImages((imgs) => [...imgs, img]))
           }
         >
           Upload Photos
         </Button>
+        <Button variant={"outline"} onClick={() => window.print()}>
+          Print
+        </Button>
       </div>
 
-      <div className="mt-6 columns-4">
+      <div className="mt-6 columns-4 printable">
         {images.map((img, idx) => (
           <div className="mb-4 break-inside-avoid" key={idx}>
             <LockerImage
               img={img.editedBlob}
               idx={idx}
               setEditingIndex={setEditingIndex}
+              deleteSelf={(index) =>
+                setImages(images.filter((_, i) => i !== index))
+              }
             />
           </div>
         ))}

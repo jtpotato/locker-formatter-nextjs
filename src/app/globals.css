@@ -140,3 +140,23 @@ body {
   height: 600px;
   background: #ddd;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .printable,
+  .printable img {
+    visibility: visible;
+    display: block;
+    border-radius: 0px !important;
+    /* margin-bottom: 2px !important; */
+  }
+
+  .printable {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+}
