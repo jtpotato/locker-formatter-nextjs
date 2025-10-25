@@ -5,8 +5,10 @@ export type LockerImageObject = {
   editedBlob: Blob;
 };
 
-/** Promise. Returns a blob array. */
-export async function openFilePicker() {
+/** Promise. Returns a streamed blob array. */
+export async function openFilePicker(
+  onProgress?: (img: LockerImageObject) => void
+) {
   const fileHandles = await window.showOpenFilePicker({
     multiple: true,
     types: [
@@ -28,22 +30,16 @@ export async function openFilePicker() {
     excludeAcceptAllOption: true,
   });
 
-  const compressedImages = await Promise.all(
-    fileHandles.map((handle) => getCompressedImageFromHandle(handle))
-  );
+  const lockerImageObjects: LockerImageObject[] = [];
 
-  // For demo purposes, just log out the compressed images
-  compressedImages.forEach((blob, index) => {
-    const url = URL.createObjectURL(blob);
-    // In a real app, you might want to display the images or process them further
-  });
-
-  const lockerImageObjects: LockerImageObject[] = compressedImages.map(
-    (blob, index) => ({
-      fileHandle: fileHandles[index],
-      editedBlob: blob,
-    })
-  );
+  for (const [index, handle] of fileHandles.entries()) {
+    const blob = await getCompressedImageFromHandle(handle);
+    const obj = { fileHandle: handle, editedBlob: blob };
+    lockerImageObjects.push(obj);
+    onProgress?.(obj);
+    console.log("Processed image.");
+    await new Promise(requestAnimationFrame); // yield to main thread
+  }
 
   return lockerImageObjects;
 }
