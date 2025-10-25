@@ -3,15 +3,12 @@
 import Spacer from "@/components/spacer";
 import { Button } from "@/components/ui/button";
 
-import {
-  getFullResImageFromHandle,
-  LockerImageObject,
-  openFilePicker,
-} from "@/lib/handleUploads";
+import { handleFilePickerChange, LockerImageObject } from "@/lib/handleUploads";
 import { useEffect, useRef, useState } from "react";
 import LockerImage from "@/components/LockerImage";
 import { Cropper, CropperRef, RectangleStencil } from "react-advanced-cropper";
 import "react-advanced-cropper/dist/style.css";
+import { Input } from "@/components/ui/input";
 
 export default function Home() {
   const [images, setImages] = useState<LockerImageObject[]>([]);
@@ -28,9 +25,8 @@ export default function Home() {
       dialogRef.current?.showModal();
 
       (async () => {
-        const blob = await getFullResImageFromHandle(
-          images[editingIndex].fileHandle
-        );
+        const blob = images[editingIndex].originalBlob;
+
         if (!cancelled) {
           setEditingImage(blob);
         }
@@ -49,22 +45,24 @@ export default function Home() {
       <div className="flex flex-col items-center">
         <h1>Locker Formatter</h1>
         <p className="text-muted">
-          Automatically pack a bunch of photos onto a page to be printed.
-          Uploading photos may take a while.
+          Automatically pack a bunch of photos onto a page to be printed. Adding
+          photos may take a while. All photos are kept on device.
         </p>
       </div>
 
       <Spacer size={4} />
 
       <div className="max-w-md m-auto gap-2 flex">
-        <Button
-          id="pictures"
-          onClick={async () =>
-            await openFilePicker((img) => setImages((imgs) => [...imgs, img]))
+        <Input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={async (e) =>
+            handleFilePickerChange(e, (img) =>
+              setImages((imgs) => [...imgs, img])
+            )
           }
-        >
-          Upload Photos
-        </Button>
+        />
         <Button variant={"outline"} onClick={() => window.print()}>
           Print
         </Button>

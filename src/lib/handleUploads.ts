@@ -1,40 +1,23 @@
-// Handles photo "uploads". Everything remains on-device. Photos too large for memory, so we use native system filepicker allowing us to hold on to file handles so we can reference when we need full res.
+// Handles photo "uploads". Everything remains on-device.
 
 export type LockerImageObject = {
-  fileHandle: FileSystemFileHandle;
+  originalBlob: Blob;
   editedBlob: Blob;
 };
 
-/** Promise. Returns a streamed blob array. */
-export async function openFilePicker(
+/* From a <input> element, get files. */
+export async function handleFilePickerChange(
+  event: React.ChangeEvent<HTMLInputElement>,
   onProgress?: (img: LockerImageObject) => void
 ) {
-  const fileHandles = await window.showOpenFilePicker({
-    multiple: true,
-    types: [
-      {
-        description: "Image files",
-        accept: {
-          "image/*": [
-            ".png",
-            ".gif",
-            ".jpeg",
-            ".jpg",
-            ".webp",
-            ".tiff",
-            ".bmp",
-          ],
-        },
-      },
-    ],
-    excludeAcceptAllOption: true,
-  });
+  const files = event.target.files;
+  if (!files) return;
 
   const lockerImageObjects: LockerImageObject[] = [];
 
-  for (const [index, handle] of fileHandles.entries()) {
-    const blob = await getCompressedImageFromHandle(handle);
-    const obj = { fileHandle: handle, editedBlob: blob };
+  for (const file of files) {
+    const compressedBlob = await getCompressedImage(file);
+    const obj = { originalBlob: file, editedBlob: compressedBlob };
     lockerImageObjects.push(obj);
     onProgress?.(obj);
     console.log("Processed image.");
@@ -44,16 +27,14 @@ export async function openFilePicker(
   return lockerImageObjects;
 }
 
-export async function getCompressedImageFromHandle(
-  fileHandle: FileSystemFileHandle
-) {
-  const file = await fileHandle.getFile();
+export async function getCompressedImage(imgBlob: Blob) {
   // paint onto canvas
   const canvas = document.createElement("canvas"); // MUST DESTROY AFTER USE
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not get canvas context");
 
-  const img = await createImageBitmap(file);
+  // paint image onto canvas
+  const img = await createImageBitmap(imgBlob);
   const MAX_DIMENSION = 1280; // max width or height
   let { width, height } = img;
   if (width > height) {
@@ -88,11 +69,4 @@ export async function getCompressedImageFromHandle(
   canvas.remove();
 
   return blob;
-}
-
-export async function getFullResImageFromHandle(
-  fileHandle: FileSystemFileHandle
-) {
-  const file = await fileHandle.getFile();
-  return file;
 }
