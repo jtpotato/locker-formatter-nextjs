@@ -46,7 +46,8 @@ export default function Home() {
         <h1>Locker Formatter</h1>
         <p className="text-muted">
           Automatically pack a bunch of photos onto a page to be printed. Adding
-          photos may take a while. All photos are kept on device.
+          photos may take a while. All photos are kept on device. Does not work
+          on Safari or iOS.
         </p>
       </div>
 
@@ -68,7 +69,7 @@ export default function Home() {
         </Button>
       </div>
 
-      <div className="mt-6 columns-4 printable">
+      <div className="mt-6 md:columns-4 columns-2 printable print:columns-4">
         {images.map((img, idx) => (
           <div className="mb-4 break-inside-avoid" key={idx}>
             <LockerImage
